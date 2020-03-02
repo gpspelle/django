@@ -1,44 +1,43 @@
 import json
 import websocket
-import time
-
-# https://github.com/jczic/MicroWebSrv
-
-# some JSON:
-x =  '{"message":"leleco eh o poder"}'
-y = json.loads(x)
+from sock import Sock
 
 try:
     import thread
 except ImportError:
     import _thread as thread
 
-def on_message(ws, message):
-    print(message)
 
-def on_error(ws, error):
-    print(error)
+def main():
+    host_websocket = 'ws://127.0.0.1:8000/ws/chat/bla/'
+    host_socket = '127.0.0.1'
+    port = 80
+    ws = websocket.WebSocket()
+    ws.connect(host_websocket, http_proxy_host="proxy_host_name", http_proxy_port=port)
 
-def on_close(ws):
-    print("### closed ###")
+    s = Sock()
+    s.bind(host_socket, port)
+    s.listen()
 
-def on_open(ws):
-    def run(*args):
-        for i in range(3):
-            time.sleep(1)
-            ws.send(str(y))
-        time.sleep(1)
-        ws.close()
-        print("thread terminating...")
-    thread.start_new_thread(run, ())
+
+    while True:
+        conn, addr = s.accept()
+        print('Connected by', addr)
+        with conn:
+
+            try:
+                while True:
+                    data = s.receive(conn)
+                    data = data.decode('utf-8')
+                    d = {"message": data }
+                    d = json.dumps(d)
+                    ws.send(d)
+            except:
+                break
+
+    s.close()
+    ws.close()
 
 
 if __name__ == "__main__":
-    websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("ws://127.0.0.1:8000/ws/chat/leleco/",
-                              on_message = on_message,
-                              on_error = on_error,
-                              on_close = on_close)
-    ws.on_open = on_open
-    ws.run_forever()
-
+    main()
