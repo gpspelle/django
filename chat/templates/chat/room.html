@@ -42,7 +42,7 @@
         document.querySelector('#chat-log').value += ('Message sent: ');
         document.querySelector('#chat-log').value += (message + '\n');
         chatSocket.send(JSON.stringify({
-            'message': message, 'recipient': 'someoneelse'
+            'message': message, 'recipient': 'chat_ble'
         }));
 
         messageInputDom.value = '';

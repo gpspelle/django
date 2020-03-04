@@ -3,7 +3,10 @@ try:
 except:
     import socket
 
-MSGLEN = 1024
+MSGLEN = 128
+
+def ljust(msg, size):
+    return msg + ' ' * max(0, size - len(msg))
 
 class Sock:
     """demonstration class only
@@ -22,8 +25,8 @@ class Sock:
 
     def send(self, msg):
         totalsent = 0
-        if len(msg) <= 1024:
-            msg = msg.ljust(1024)
+        msg = ljust(msg, MSGLEN)
+        msg = msg.encode()
 
         while totalsent < MSGLEN:
             sent = self.sock.send(msg[totalsent:])
@@ -49,8 +52,8 @@ class Sock:
     def bind(self, host, port):
         self.sock.bind((host, port))
 
-    def listen(self):
-        self.sock.listen()
+    def listen(self, n):
+        self.sock.listen(n)
 
     def close(self):
         self.sock.close()

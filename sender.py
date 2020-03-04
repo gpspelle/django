@@ -1,9 +1,14 @@
 import json
 import websocket
 from sock import Sock
+import socket
 import threading
 import time
 
+esp32_host = '192.168.4.1'
+local_host = '192.168.4.2'
+#localhost = '127.0.0.1'
+#esp32_host = '127.0.0.1'
 
 lock_chat = threading.Lock()
 lock_esp = threading.Lock()
@@ -15,6 +20,49 @@ esp_send_buffer = None
 running_esp = True
 running_chat = True
 
+def on_message(ws, message):
+    global lock_esp
+    global esp_send_buffer
+    global esp_send_state
+
+    print(message)
+
+    lock_esp.acquire()
+    try:
+        esp_send_buffer = message.encode()
+        esp_send_state = True
+    finally:
+        lock_esp.release()
+
+def on_error(ws, error):
+    print(error)
+
+def on_close(ws):
+    print("### closed ###")
+
+def on_open(ws):
+    def run(ws):
+        global running_esp
+        global chat_send_state
+        global chat_send_buffer
+        global lock_chat
+
+        while running_esp:
+            while not chat_send_state:
+                pass
+
+            lock_chat.acquire()
+            try:
+                ws.send(chat_send_buffer)
+                chat_send_state = False
+                chat_send_buffer = None
+            finally:
+                lock_chat.release()
+
+        ws.close()
+
+    x = threading.Thread(target=run, args=(ws, ))
+    x.start()
 '''
 
     Open WebSocket to connect to JavaScript WebSocket from the django framework
@@ -22,30 +70,13 @@ running_chat = True
     Send data only while running_esp is true and chat_send_state is set to true
 
 '''
-def chat_send(thread_name):
-    global chat_send_state
-    global chat_send_buffer
-    global running_esp
-    global lock_chat
+def chat_manager(thread_name):
+    host_websocket = 'ws://127.0.0.1:8000/ws/chat/ble/'
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp(host_websocket, on_message = on_message, on_error = on_error, on_close = on_close)
+    ws.on_open = on_open
 
-    host_websocket = 'ws://127.0.0.1:8000/ws/chat/bla/'
-    port = 80
-    ws = websocket.WebSocket()
-    ws.connect(host_websocket, http_proxy_host="proxy_host_name", http_proxy_port=port)
-
-    while running_esp:
-        while not chat_send_state:
-            pass
-
-        lock_chat.acquire()
-        try:
-            ws.send(chat_send_buffer)
-            chat_send_state = False
-            chat_send_buffer = None
-        finally:
-            lock_chat.release()
-
-    ws.close()
+    ws.run_forever()
 
 
 '''
@@ -53,6 +84,9 @@ def chat_send(thread_name):
     Open socket to receive data from consumer of django framework
 
     Set variables to other thread send data to the esp32
+
+'''
+
 
 '''
 
@@ -92,6 +126,7 @@ def chat_receive(thread_name):
 
     s.close()
 
+'''
 
 '''
 
@@ -108,13 +143,12 @@ def esp_send(thread_name):
     global running_chat
     global lock_chat
 
-    host_socket = '127.0.0.1'
     port = 8880
     s = Sock()
 
     while True:
         try:
-            s.connect(host_socket, port)
+            s.connect(esp32_host, port)
             break
         except:
             print("Connection Failed, Retrying...")
@@ -126,7 +160,7 @@ def esp_send(thread_name):
 
         lock_chat.acquire()
         try:
-            s.send(esp_send_buffer)
+            s.send(esp_send_buffer.decode('utf-8'))
             esp_send_state = False
             esp_send_buffer = None
         finally:
@@ -149,11 +183,10 @@ def esp_receive(thread_name):
     global running_esp
     global lock_chat
 
-    host_socket = '127.0.0.1'
     port = 80
     s = Sock()
-    s.bind(host_socket, port)
-    s.listen()
+    s.bind(local_host, port)
+    s.listen(5)
 
     while True:
         conn, addr = s.accept()
@@ -167,7 +200,7 @@ def esp_receive(thread_name):
 
                     data = s.receive(conn)
                     data = data.decode('utf-8')
-                    d = {"message": data, "recipient": 'itself'}
+                    d = {"message": data, "recipient": 'chat_bla'}
                     d = json.dumps(d)
 
                     lock_chat.acquire()
@@ -193,14 +226,12 @@ def main():
 
     # Create two threads as follows
     try:
-        x = threading.Thread(target=chat_send, args=("Thread-1", ))
+        x = threading.Thread(target=chat_manager, args=("Thread-1", ))
         y = threading.Thread(target=esp_receive, args=("Thread-2", ))
-        w = threading.Thread(target=chat_receive, args=("Thread-3", ))
-        z = threading.Thread(target=esp_send, args=("Thread-4", ))
+        z = threading.Thread(target=esp_send, args=("Thread-3", ))
 
         x.start()
         y.start()
-        w.start()
         z.start()
     except:
         print("Error: unable to start thread")
