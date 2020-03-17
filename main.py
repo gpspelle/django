@@ -10,6 +10,9 @@ try:
 except:
     import time
 
+class BreakoutException(Exception):
+    pass
+
 esp32_host = '192.168.4.1'
 local_host = '192.168.4.2'
 #esp32_host = '127.0.0.1'
@@ -19,12 +22,16 @@ def send_to_server(name):
     port = 80
 
     s = Sock()
-    s.connect(local_host, port)
 
-    print("send to server connected")
+    while True:
+        try:
+            s.connect(local_host, port)
+            break
+        except:
+            print("Connection Failed, Retrying...")
+            time.sleep(1)
 
     for i in range(1000):
-
         message = 'message ' + str(i) + '\n'
         s.send(message)
 
@@ -36,9 +43,8 @@ def receive_from_server(name):
 
     s = Sock()
     s.bind(esp32_host, port)
-    s.listen(5)
+    s.listen(1000)
 
-    print("receive from server connected")
     while True:
         conn, addr = s.accept()
         print('Connected by', addr)
@@ -56,7 +62,7 @@ def receive_from_server(name):
 
 
 def main():
-    i = input("Permission to start!")
+
     # Create two threads as follows
     try:
         _thread.start_new_thread(send_to_server, ("Thread-1", ))

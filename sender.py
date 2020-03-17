@@ -34,11 +34,14 @@ def on_message(ws, message):
     finally:
         lock_esp.release()
 
+
 def on_error(ws, error):
     print(error)
 
+
 def on_close(ws):
     print("### closed ###")
+
 
 def on_open(ws):
     def run(ws):
@@ -63,6 +66,7 @@ def on_open(ws):
 
     x = threading.Thread(target=run, args=(ws, ))
     x.start()
+
 '''
 
     Open WebSocket to connect to JavaScript WebSocket from the django framework
@@ -70,6 +74,7 @@ def on_open(ws):
     Send data only while running_esp is true and chat_send_state is set to true
 
 '''
+
 def chat_manager(thread_name):
     host_websocket = 'ws://127.0.0.1:8000/ws/chat/ble/'
     websocket.enableTrace(True)
@@ -78,55 +83,6 @@ def chat_manager(thread_name):
 
     ws.run_forever()
 
-
-'''
-
-    Open socket to receive data from consumer of django framework
-
-    Set variables to other thread send data to the esp32
-
-'''
-
-
-'''
-
-def chat_receive(thread_name):
-    global esp_send_state
-    global esp_send_buffer
-    global running_chat
-    global lock_esp
-
-    host_socket = '127.0.0.1'
-    port = 8888
-    s = Sock()
-    s.bind(host_socket, port)
-    s.listen()
-
-    while True:
-        conn, addr = s.accept()
-        print('Connected by', addr)
-        with conn:
-            while True:
-
-                try:
-                    while esp_send_state:
-                        pass
-
-                    data = s.receive(conn)
-                    print(data.decode('utf-8'))
-
-                    lock_esp.acquire()
-                    try:
-                        esp_send_buffer = data
-                        esp_send_state = True
-                    finally:
-                        lock_esp.release()
-                except:
-                    break
-
-    s.close()
-
-'''
 
 '''
 
@@ -186,7 +142,7 @@ def esp_receive(thread_name):
     port = 80
     s = Sock()
     s.bind(local_host, port)
-    s.listen(5)
+    s.listen(1000)
 
     while True:
         conn, addr = s.accept()
@@ -223,6 +179,7 @@ def esp_receive(thread_name):
 
 
 def main():
+
 
     # Create two threads as follows
     try:
