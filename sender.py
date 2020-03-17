@@ -5,8 +5,8 @@ import socket
 import threading
 import time
 
-esp32_host = '192.168.4.1'
-local_host = '192.168.4.2'
+esp32_host = '192.168.2.168'
+local_host = '192.168.2.127'
 #localhost = '127.0.0.1'
 #esp32_host = '127.0.0.1'
 

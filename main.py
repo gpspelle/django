@@ -2,23 +2,59 @@ from sock import Sock
 import _thread
 try:
     import usocket as socket
+    import utime as time
+    import ujson as json
 except:
     import socket
-
-try:
-    import utime as time
-except:
     import time
+    import json
 
-class BreakoutException(Exception):
-    pass
 
-esp32_host = '192.168.4.1'
-local_host = '192.168.4.2'
+lock_robot = _thread.allocate_lock()
+
+esp32_host = '192.168.2.168'
+local_host = '192.168.2.127'
 #esp32_host = '127.0.0.1'
+
+def send_uart(message):
+    global lock_robot
+
+    print(message)
+
+    if message == 'forward':
+        pass
+        # 1
+
+    elif message == 'backward':
+        pass
+        # 2
+
+    elif message == 'left':
+        pass
+        # 3
+
+    elif message == 'right':
+        pass
+        # 4
+
+    elif message == 'stop':
+        lock_robot.acquire()
+        print("Lock acquired")
+        # 5
+
+    elif message == 'go':
+        lock_robot.release()
+        print("Lock released")
+        # 6
+
+    else:
+        pass
+        # unknown message
+
 
 def send_to_server(name):
 
+    global lock_robot
     port = 80
 
     s = Sock()
@@ -31,11 +67,17 @@ def send_to_server(name):
             print("Connection Failed, Retrying...")
             time.sleep(1)
 
-    for i in range(1000):
+    for i in range(20):
         message = 'message ' + str(i) + '\n'
+        while lock_robot.locked():
+            pass
+        print("Lock state:", lock_robot.locked())
+        time.sleep(1)
         s.send(message)
 
+    print("Finished senting")
     s.close()
+
 
 def receive_from_server(name):
 
@@ -51,9 +93,14 @@ def receive_from_server(name):
         try:
             while True:
 
-                data = s.receive(conn)
-                data = data.decode('utf-8')
-                print(data)
+                message = s.receive(conn)
+                message = message.decode('utf-8')
+
+                message = json.loads(message)
+                message = message['message']
+
+                send_uart(message)
+
 
         except:
             break
