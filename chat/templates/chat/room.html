@@ -78,7 +78,7 @@
 
     var chatSocket = new WebSocket( ws_scheme + window.location.host + '/ws/chat/' + roomName + '/', {
 	  protocolVersion: 8,
-	  origin: window.location.protocol +  window.location.host + '/ws/chat/' + roomName + '/',
+	  origin: window.location.protocol + '//' + window.location.host + '/ws/chat/' + roomName + '/',
 	  rejectUnauthorized: false
     });
 
