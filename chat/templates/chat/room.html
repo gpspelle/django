@@ -71,14 +71,21 @@
 
     // Support TLS-specific URLs, when appropriate.
     if (window.location.protocol == "https:") {
-        var ws_scheme = "ws://";
+        var ws_scheme = "wss://";
     } else {
 	var ws_scheme = "ws://";
     };
 
     var chatSocket = new WebSocket(
         ws_scheme + window.location.host +
-        '/ws/chat/' + roomName + '/');
+        '/ws/chat/' + roomName + '/', 
+        {
+	  protocolVersion: 8,
+	  origin: ws_scheme + window.location.host + '/ws/chat/' + roomName + '/',
+	  rejectUnauthorized: false
+	}
+    
+    );
 
     chatSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
