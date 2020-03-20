@@ -76,16 +76,11 @@
 	var ws_scheme = "ws://";
     };
 
-    var chatSocket = new WebSocket(
-        ws_scheme + window.location.host +
-        '/ws/chat/' + roomName + '/', 
-        {
+    var chatSocket = new WebSocket( ws_scheme + window.location.host + '/ws/chat/' + roomName + '/', {
 	  protocolVersion: 8,
-	  origin: ws_scheme + window.location.host + '/ws/chat/' + roomName + '/',
+	  origin: window.location.protocol +  window.location.host + '/ws/chat/' + roomName + '/',
 	  rejectUnauthorized: false
-	}
-    
-    );
+    });
 
     chatSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
