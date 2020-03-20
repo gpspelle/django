@@ -25,7 +25,7 @@ SECRET_KEY = 'jl38tk-ae9lf4t9=+sqxt(dck&+jr4__x8zf1*#m2wt$5kej$('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['salty-brook-17226.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -77,7 +77,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('salty-brook-17226.herokuapp.com', 6379)],
+            "hosts": [('127.0.0.1', 6379)],
         },
     },
 }
