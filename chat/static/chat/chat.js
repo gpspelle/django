@@ -1,106 +1,56 @@
-var roomName = "{{ room_name|escapejs }}";
+$(function() {
 
-	
-// When we're using HTTPS, use WSS too.
-var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-var chatSocket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/chat" + window.location.pathname);
+	var roomName = "{{ room_name|escapejs }}";
 
-//var wss_protocol = (window.location.protocol == 'https:') ? 'wss://': 'ws://';
-//var chatSocket = new WebSocket(
-//wss_protocol + window.location.host + '/ws/chat/' + roomName + '/'
-//);
+		
+	// When we're using HTTPS, use WSS too.
+	var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
+	var chatSocket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/chat" + window.location.pathname);
 
-chatSocket.onmessage = function(e) {
-var data = JSON.parse(e.data);
-var message = data['message'];
-document.querySelector('#chat-log').value += ('Message received: ');
-document.querySelector('#chat-log').value += (message + '\n');
+	//var wss_protocol = (window.location.protocol == 'https:') ? 'wss://': 'ws://';
+	//var chatSocket = new WebSocket(
+	//wss_protocol + window.location.host + '/ws/chat/' + roomName + '/'
+	//);
 
-};
+	chatSocket.onmessage = function(e) {
+		var data = JSON.parse(e.data);
+		var message = data['message'];
+		document.querySelector('#chat-log').value += ('Message received: ');
+		document.querySelector('#chat-log').value += (message + '\n');
 
-chatSocket.onclose = function(e) {
-console.error('Chat socket closed unexpectedly');
-};
+	};
 
-document.querySelector('#chat-message-input').focus();
-document.querySelector('#chat-message-input').onkeyup = function(e) {
-if (e.keyCode === 13) {  // enter, return
-document.querySelector('#chat-message-submit').click();
-}
-};
+	chatSocket.onclose = function(e) {
+		console.error('Chat socket closed unexpectedly');
+	};
 
-document.querySelector('#chat-message-submit').onclick = function(e) {
-var messageInputDom = document.querySelector('#chat-message-input');
-var message = messageInputDom.value;
-document.querySelector('#chat-log').value += ('Message sent: ');
-document.querySelector('#chat-log').value += (message + '\n');
-chatSocket.send(JSON.stringify({
-'message': message, 'recipient': 'chat_ble'
-}));
+	document.querySelector('#chat-message-input').focus();
+	document.querySelector('#chat-message-input').onkeyup = function(e) {
+		if (e.keyCode === 13) {  // enter, return
+		document.querySelector('#chat-message-submit').click();
+		}
+	};
 
-messageInputDom.value = '';
-};
+	document.querySelector('#chat-message-submit').onclick = function(e) {
+		var messageInputDom = document.querySelector('#chat-message-input');
+		var message = messageInputDom.value;
+		document.querySelector('#chat-log').value += ('Message sent: ');
+		document.querySelector('#chat-log').value += (message + '\n');
+		chatSocket.send(JSON.stringify({
+			'message': message, 'recipient': 'chat_ble'
+		}));
 
-function sendMessage(message) {
+		messageInputDom.value = '';
+	};
 
-document.querySelector('#chat-log').value += ('Message sent: ');
-document.querySelector('#chat-log').value += (message + '\n');
+	function sendMessage(message) {
 
-chatSocket.send(JSON.stringify({
-'message': message, 'recipient': 'chat_ble'
-}));
-};
+		document.querySelector('#chat-log').value += ('Message sent: ');
+		document.querySelector('#chat-log').value += (message + '\n');
 
-</script>
-var roomName = "{{ room_name|escapejs }}";
+		chatSocket.send(JSON.stringify({
+			'message': message, 'recipient': 'chat_ble'
+		}));
+	};
 
-	
-// When we're using HTTPS, use WSS too.
-var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-var chatSocket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/chat" + window.location.pathname);
-
-//var wss_protocol = (window.location.protocol == 'https:') ? 'wss://': 'ws://';
-//var chatSocket = new WebSocket(
-//wss_protocol + window.location.host + '/ws/chat/' + roomName + '/'
-//);
-
-chatSocket.onmessage = function(e) {
-	var data = JSON.parse(e.data);
-	var message = data['message'];
-	document.querySelector('#chat-log').value += ('Message received: ');
-	document.querySelector('#chat-log').value += (message + '\n');
-
-};
-
-chatSocket.onclose = function(e) {
-	console.error('Chat socket closed unexpectedly');
-};
-
-document.querySelector('#chat-message-input').focus();
-document.querySelector('#chat-message-input').onkeyup = function(e) {
-	if (e.keyCode === 13) {  // enter, return
-	document.querySelector('#chat-message-submit').click();
-	}
-};
-
-document.querySelector('#chat-message-submit').onclick = function(e) {
-	var messageInputDom = document.querySelector('#chat-message-input');
-	var message = messageInputDom.value;
-	document.querySelector('#chat-log').value += ('Message sent: ');
-	document.querySelector('#chat-log').value += (message + '\n');
-	chatSocket.send(JSON.stringify({
-		'message': message, 'recipient': 'chat_ble'
-	}));
-
-	messageInputDom.value = '';
-};
-
-function sendMessage(message) {
-
-	document.querySelector('#chat-log').value += ('Message sent: ');
-	document.querySelector('#chat-log').value += (message + '\n');
-
-	chatSocket.send(JSON.stringify({
-		'message': message, 'recipient': 'chat_ble'
-	}));
-};
+});
