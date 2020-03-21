@@ -71,7 +71,7 @@
     var roomName = "{{ room_name|escapejs }}";
 
     var wss_protocol = (window.location.protocol == 'https:') ? 'wss://': 'ws://';
-    var chatSocket = new ReconnectingWebSocket(
+    var chatSocket = new WebSocket(
         wss_protocol + window.location.host + '/ws/chat/' + roomName + '/'
     );
 
