@@ -20,7 +20,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 SECRET_KEY = 'jl38tk-ae9lf4t9=+sqxt(dck&+jr4__x8zf1*#m2wt$5kej$('
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -75,11 +74,12 @@ ASGI_APPLICATION = 'mysite.routing.application'
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
+# Channel settings
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [os.environ['REDIS_URL']],
+            "hosts": [('gpspelle.com', 6379)],
         },
     },
 }
