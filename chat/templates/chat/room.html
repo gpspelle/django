@@ -8,8 +8,9 @@
 <!DOCTYPE html>
 <html>
 <head> 
-    <script type="text/javascript" src="jquery-1.12.1.min.js"></script>
-    <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
+    <script type="text/javascript" src='{% static "jquery-1.12.1.min.js" %}'></script>
+    <script type="text/javascript" src='{% static "reconnecting-websocket.min.js" %}'></script>
+    <script type="text/javascript" src='{% static "chat.js" %}'></script>
     <meta content="charset=utf-8" http-equiv="Content-Type">
     <title>Chat Room</title>
 </head>
@@ -66,62 +67,5 @@
     </div>
 
 </body>
-
-
-<script>
-    var roomName = "{{ room_name|escapejs }}";
-
-	
-    // When we're using HTTPS, use WSS too.
-    var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-    var chatSocket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/chat" + window.location.pathname);
-
-    //var wss_protocol = (window.location.protocol == 'https:') ? 'wss://': 'ws://';
-    //var chatSocket = new WebSocket(
-    //    wss_protocol + window.location.host + '/ws/chat/' + roomName + '/'
-    //);
-
-    chatSocket.onmessage = function(e) {
-        var data = JSON.parse(e.data);
-        var message = data['message'];
-        document.querySelector('#chat-log').value += ('Message received: ');
-        document.querySelector('#chat-log').value += (message + '\n');
-
-    };
-
-    chatSocket.onclose = function(e) {
-        console.error('Chat socket closed unexpectedly');
-    };
-
-    document.querySelector('#chat-message-input').focus();
-    document.querySelector('#chat-message-input').onkeyup = function(e) {
-        if (e.keyCode === 13) {  // enter, return
-            document.querySelector('#chat-message-submit').click();
-        }
-    };
-
-    document.querySelector('#chat-message-submit').onclick = function(e) {
-        var messageInputDom = document.querySelector('#chat-message-input');
-        var message = messageInputDom.value;
-        document.querySelector('#chat-log').value += ('Message sent: ');
-        document.querySelector('#chat-log').value += (message + '\n');
-        chatSocket.send(JSON.stringify({
-            'message': message, 'recipient': 'chat_ble'
-        }));
-
-        messageInputDom.value = '';
-    };
-
-    function sendMessage(message) {
-
-        document.querySelector('#chat-log').value += ('Message sent: ');
-        document.querySelector('#chat-log').value += (message + '\n');
-
-        chatSocket.send(JSON.stringify({
-            'message': message, 'recipient': 'chat_ble'
-        }));
-    };
-
-</script>
 </html>
 
