@@ -1,14 +1,14 @@
 <!-- chat/templates/chat/room.html -->
 
-{% load static %}
-
-<link rel="stylesheet" type="text/css" href="{% static 'chat/style.css' %}">
 
 
 <!DOCTYPE html>
 <html>
 <head> 
-    <meta content="charset=utf-8" http-equiv="Content-Type">
+    <meta charset="utf-8">
+
+    {% load static %} 
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/style.css' %}">
     <title>Chat Room</title>
 </head>
 <body>
