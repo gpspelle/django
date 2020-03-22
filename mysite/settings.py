@@ -76,9 +76,9 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Channel settings
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'asgi_redis.core.RedisChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": ['redis://localhost:6379'],
+            "hosts": [("127.0.0.1", 6379)],
         },
     },
 }
