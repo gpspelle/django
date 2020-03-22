@@ -2,7 +2,6 @@
     "name": "Django Chatbot",
     "description": "Django Chatbot application with the background tasks processing and communications via WebSockets.",
     "keywords": [
-      "celery",
       "django",
       "heroku",
       "daphne",
