@@ -72,13 +72,14 @@ TEMPLATES = [
 ASGI_APPLICATION = 'mysite.routing.application'
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
+redis_host = os.environ.get('REDIS_HOST', '127.0.0.1')
 
 # Channel settings
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [os.environ['REDIS_URL']],
+            "hosts": [(redis_host, 6379)],
         },
     },
 }
