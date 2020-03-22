@@ -25,13 +25,7 @@ SECRET_KEY = 'jl38tk-ae9lf4t9=+sqxt(dck&+jr4__x8zf1*#m2wt$5kej$('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True 
 
-
-# Honor the 'X-Forwarded-Proto' header for request.is_secure()
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-#ALLOWED_HOSTS = ['salty-brook-17226.herokuapp.com', '127.0.0.1', 'gpspelle.com']
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = ['salty-brook-17226.herokuapp.com', '127.0.0.1', 'gpspelle.com']
 
 # Application definition
 INSTALLED_APPS = [
@@ -82,9 +76,9 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Channel settings
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'asgi_redis.core.RedisChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": ['redis://localhost:6379'],
+            "hosts": [('127.0.0.1', 6379],
         },
     },
 }
