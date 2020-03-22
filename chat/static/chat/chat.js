@@ -1,11 +1,11 @@
 $(function() {
 
-	var roomName = "{{ room_name|escapejs }}";
-
+	//var roomName = document.getElementById("room").getAttribute("room-name");
 		
 	// When we're using HTTPS, use WSS too.
 	var ws_scheme = window.location.protocol == "https:" ? "wss://" : "ws://";
-	var chatSocket = new ReconnectingWebSocket(ws_scheme + window.location.host + '/ws/chat/bla');
+	var chatSocket = new WebSocket(ws_scheme + window.location.host + '/ws/chat/bla/');
+	//var chatSocket = new WebSocket(ws_scheme + window.location.host + '/ws/chat/' + roomName + '/');
 
 	//var wss_protocol = (window.location.protocol == 'https:') ? 'wss://': 'ws://';
 	//var chatSocket = new WebSocket(
@@ -20,9 +20,15 @@ $(function() {
 
 	};
 
+
+	chatSocket.onopen = function(e) {
+		document.querySelector('#chat-log').value += ('Welcome to the Django Chatbot.\nPlease type `help` for the commands list.\n')
+	}
+
+
 	chatSocket.onclose = function(e) {
-		console.log('closed');
-		this.chatSocket = new WebSocket(chatSocket.url);
+		document.querySelector('#chat-log').value += ('Socket closed unexpectedly, please reload the page.\n')
+		//this.chatSocket = new WebSocket(chatSocket.url);
 	};
 
 	document.querySelector('#chat-message-input').focus();
