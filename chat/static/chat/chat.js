@@ -27,7 +27,7 @@ $(function() {
 	document.querySelector('#chat-message-input').focus();
 	document.querySelector('#chat-message-input').onkeyup = function(e) {
 		if (e.keyCode === 13) {  // enter, return
-		document.querySelector('#chat-message-submit').click();
+			document.querySelector('#chat-message-submit').click();
 		}
 	};
 
@@ -43,8 +43,9 @@ $(function() {
 		messageInputDom.value = '';
 	};
 
-	function sendMessage(message) {
+	document.querySelector('#button-handler').onclick = function (e) {
 
+		var message = e.target.id;
 		document.querySelector('#chat-log').value += ('Message sent: ');
 		document.querySelector('#chat-log').value += (message + '\n');
 
