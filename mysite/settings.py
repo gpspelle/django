@@ -147,19 +147,3 @@ import dj_database_url
 
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
-
-
-CELERY_BROKER_URL = ('localhost', 6379)
-CELERY_RESULT_BACKEND = ('localhost', 6379)
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": ('localhost', 6379),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        }
-    }
-}
-
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
