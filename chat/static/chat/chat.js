@@ -21,8 +21,8 @@ $(function() {
 	};
 
 	chatSocket.onclose = function(e) {
-		chatSocket.close();
-		console.error('Chat socket closed unexpectedly');
+		console.log('closed');
+		this.chatSocket = new WebSocket(chatSocket.url);
 	};
 
 	document.querySelector('#chat-message-input').focus();
