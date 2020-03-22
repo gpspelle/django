@@ -1,26 +1,41 @@
 {
-    "name": "Django Channels Example",
-    "description": "A real-time chat app, built as a simple example of using Django Channels ",
-    "repository": "https://github.com/gpspelle/django",
-    "keywords": ["django", "channels", "websockets"],
-    "scripts": {
-        "postdeploy": "python manage.py migrate"
-    },
+    "name": "Django Chatbot",
+    "description": "Django Chatbot application with the background tasks processing and communications via WebSockets.",
+    "keywords": [
+      "celery",
+      "django",
+      "heroku",
+      "daphne",
+      "channels",
+      "django-channels",
+      "chatbot",
+      "websockets"
+    ],
+    "website": "https://github.com/inoks/django-chatbot/",
+    "repository": "https://github.com/gpspelle/django/",
     "env": {
-        "SECRET_KEY": {
-            "description": "Django's SECRET_KEY setting",
-            "generator": "secret"
-        }
+      "DJANGO_SECRET_KEY": {
+        "description": "A secret key for a particular Django installation.",
+        "generator": "secret"
+      }
     },
-    "addons": ["heroku-postgresql", "heroku-redis"],
     "formation": {
-        "web": {
-            "quantity": 1,
-          " size": "Free"
+      "web": {
+        "quantity": 1,
+        "size": "free"
+      }
+    },
+    "buildpacks": [
+      {
+        "url": "heroku/python"
+      }
+    ],
+    "addons": [
+        {
+            "plan": "heroku-postgresql"
         },
-        "worker": {
-            "quantity": 1,
-            "size": "Free"
+        {
+            "plan": "heroku-redis"
         }
-    }
-}
+    ]
+  }
