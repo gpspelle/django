@@ -21,6 +21,7 @@ $(function() {
 	};
 
 	chatSocket.onclose = function(e) {
+		chatSocket.close();
 		console.error('Chat socket closed unexpectedly');
 	};
 
