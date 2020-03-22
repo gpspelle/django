@@ -22,6 +22,7 @@ $(function() {
 
 
 	chatSocket.onopen = function(e) {
+		console.log("WebSocket is open now.");
 		document.querySelector('#chat-log').value += ('Welcome to the Django Chatbot.\nPlease type `help` for the commands list.\n')
 	}
 
