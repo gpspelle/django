@@ -76,9 +76,9 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Channel settings
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'BACKEND': 'asgi_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": ['redis://localhost:6379'],
         },
     },
 }
@@ -149,13 +149,13 @@ db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
 
 
-CELERY_BROKER_URL = ('gpspelle.com', 6379)
-CELERY_RESULT_BACKEND = ('gpspelle.com', 6379)
+CELERY_BROKER_URL = ('localhost', 6379)
+CELERY_RESULT_BACKEND = ('localhost', 6379)
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": ('gpspelle.com', 6379),
+        "LOCATION": ('localhost', 6379),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
         }
