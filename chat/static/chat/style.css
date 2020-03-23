@@ -16,6 +16,7 @@ body{
   background-color: #E6E6E6;
   position: relative;
   box-shadow: 15px 15px 15px rgba(0,0,0,0.2);
+  pointer-events: none;
 }
 
 .controllerLeft{
@@ -50,6 +51,7 @@ body{
   border: solid 5px rgba(184, 184, 184, 1);
   margin-left: 42px;
   margin-top: 52px;
+  pointer-events: none;
 }
 
 .crossCenter{
@@ -59,7 +61,7 @@ body{
   margin-top: 110px;
   margin-left: 100px;
   position: relative;
-  pointer-events: inherit;
+  pointer-events: none;
 
 }
 
@@ -71,6 +73,7 @@ body{
   border-radius: 100%;
   margin-top: 5px;
   margin-left: 5px;
+  pointer-events: none;
 }
 
 .crossTop{
@@ -80,7 +83,6 @@ body{
   position: absolute;
   border-radius: 15%;
   margin-top: -30px;
-  pointer-events: inherit;
   pointer-events: auto;
 }
 
@@ -121,6 +123,7 @@ body{
   margin-left: 175px;
   margin-top: 30px;
   background-color: #0099FF;
+  pointer-events: none;
 }
 
 .centerLeft{
@@ -131,6 +134,7 @@ body{
   margin-top: 0px;
   background-color: #0099FF;
   border-radius: 100%;
+  pointer-events: none;
 }
 
 .centerRight{
@@ -141,6 +145,7 @@ body{
   margin-top: 0px;
   background-color: #0099FF;
   border-radius: 100%;
+  pointer-events: none;
 }
 
 .backButton1Center{
@@ -218,6 +223,7 @@ body{
   margin-left: 180px;
   margin-top: 110px;
   -webkit-transform: rotate(20deg);
+  pointer-events: none;
 }
 
 .centerSelect{
@@ -228,7 +234,7 @@ body{
   margin-left: 205px;
   margin-top: 110px;
   -webkit-transform: rotate(20deg);
-  pointer-events: inherit;
+  pointer-events: none;
 }
 
 .SLeft{
@@ -238,6 +244,7 @@ body{
   height: 10px;
   width: 10px;
   margin-top: 30px;
+  pointer-events: none;
 }
 
 .SRight{
@@ -247,6 +254,7 @@ body{
   height: 10px;
   width: 10px;
   margin-top: -5px;
+  pointer-events: none;
 }
 
 .cable{
@@ -257,4 +265,5 @@ body{
   margin-left: 49.7%;
   margin-top: -100px;
   box-shadow: 7px 8px 15px rgba(0,0,0,0.2);
+  pointer-events: none;
 }
