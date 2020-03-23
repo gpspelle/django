@@ -12,9 +12,15 @@ except:
 
 lock_robot = _thread.allocate_lock()
 
-esp32_host = '192.168.2.168'
-local_host = '192.168.2.127'
+#NotAVairus
+esp32_host = '192.168.43.200'
+local_host = '192.168.43.187'
+#Brason
+#esp32_host = '192.168.2.168'
+#local_host = '192.168.2.127'
+#localhost
 #esp32_host = '127.0.0.1'
+#local_host = '127.0.0.1'
 
 def send_uart(message):
     global lock_robot
@@ -55,7 +61,7 @@ def send_uart(message):
 def send_to_server(name):
 
     global lock_robot
-    port = 80
+    port = 8080
 
     s = Sock()
 

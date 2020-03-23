@@ -5,8 +5,13 @@ import socket
 import threading
 import time
 
-esp32_host = '192.168.2.168'
-local_host = '192.168.2.127'
+#NotAVairus
+esp32_host = '192.168.43.200'
+local_host = '192.168.43.187'
+#Brason
+#esp32_host = '192.168.2.168'
+#local_host = '192.168.2.127'
+#Local
 #localhost = '127.0.0.1'
 #esp32_host = '127.0.0.1'
 
@@ -76,7 +81,7 @@ def on_open(ws):
 '''
 
 def chat_manager(thread_name):
-    host_websocket = 'ws://127.0.0.1:8000/ws/chat/ble/'
+    host_websocket = 'ws://gpspelle.com/ws/chat/ble/'
     websocket.enableTrace(True)
     ws = websocket.WebSocketApp(host_websocket, on_message = on_message, on_error = on_error, on_close = on_close)
     ws.on_open = on_open
@@ -139,7 +144,7 @@ def esp_receive(thread_name):
     global running_esp
     global lock_chat
 
-    port = 80
+    port = 8080
     s = Sock()
     s.bind(local_host, port)
     s.listen(1000)
