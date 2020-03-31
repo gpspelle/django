@@ -1,6 +1,0 @@
-{
-  1: {"ssid":"Network1", "pword":"PasswordForNetwork1"},
-  2: {"ssid":"NotAVairus", "pword":"123987456"},
-  3: {"ssid":"Brason", "pword":"perguntaprojoao"},
- -1: {"ssid":"ESP32_WiFi", "pword":"Password123"}
-}
