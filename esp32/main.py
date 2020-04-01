@@ -9,6 +9,7 @@ except:
     import time
     import json
 
+from microWebSrv import MicroWebSrv
 
 lock_robot = _thread.allocate_lock()
 
@@ -22,7 +23,29 @@ local_host = '192.168.43.187'
 #esp32_host = '127.0.0.1'
 #local_host = '127.0.0.1'
 
-def send_uart(message):
+
+def _acceptWebSocketCallback(webSocket, httpClient) :
+    print("WS ACCEPT")
+    webSocket.RecvTextCallback   = _recvTextCallback
+    webSocket.RecvBinaryCallback = _recvBinaryCallback
+    webSocket.ClosedCallback     = _closedCallback
+
+def _recvTextCallback(webSocket, msg) :
+    print("WS RECV TEXT : %s" % msg)
+    msg = msg.decode('utf-8')
+
+    msg = json.loads(msg)
+    msg = message['message']
+
+    send_uart(msg)
+
+def _recvBinaryCallback(webSocket, data) :
+    print("WS RECV DATA : %s" % data)
+
+    def _closedCallback(webSocket) :
+        print("WS CLOSED")
+
+    def send_uart(message):
     global lock_robot
 
     print(message)
@@ -58,71 +81,24 @@ def send_uart(message):
         # unknown message
 
 
-def send_to_server(name):
+def main():
 
-    global lock_robot
-    port = 8080
-
-    s = Sock()
-
-    while True:
-        try:
-            s.connect(local_host, port)
-            break
-        except:
-            print("Connection Failed, Retrying...")
-            time.sleep(1)
+    mws = MicroWebSrv(bindIP='ws://192.168.43.200') # TCP port 80 and files in /flash/www
+    mws.AcceptWebSocketCallback = _acceptWebSocketCallback # Function to receive WebSockets
+    mws.Start(threaded=True)                               # Starts server in a new thread
 
     for i in range(20):
         message = 'message ' + str(i) + '\n'
         while lock_robot.locked():
             pass
         print("Lock state:", lock_robot.locked())
+        mws.sendText(message)
         time.sleep(1)
-        s.send(message)
 
     print("Finished senting")
-    s.close()
 
 
-def receive_from_server(name):
-
-    port = 8880
-
-    s = Sock()
-    s.bind(esp32_host, port)
-    s.listen(1000)
-
-    while True:
-        conn, addr = s.accept()
-        print('Connected by', addr)
-        try:
-            while True:
-
-                message = s.receive(conn)
-                message = message.decode('utf-8')
-
-                message = json.loads(message)
-                message = message['message']
-
-                send_uart(message)
-
-
-        except:
-            break
-
-    s.close()
-
-
-def main():
-
-    # Create two threads as follows
-    try:
-        _thread.start_new_thread(send_to_server, ("Thread-1", ))
-        _thread.start_new_thread(receive_from_server, ("Thread-2", ))
-    except:
-        print("Error: unable to start thread")
-
+    # Is it necessary?
     while True:
         pass
 
