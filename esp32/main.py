@@ -8,19 +8,20 @@ except:
     import time
     import json
 
-from machine import UART
+from machine import UART, Pin
 import uwebsockets.client
 
 TX2 = 17
 RX2 = 16
 
-uart = UART(1, 9600)
-uart.init(9600, bits=8, parity=None, stop=1, rx=RX2, tx=TX2)
+uart = UART(1, 115200)
+uart.init(115200, bits=8, parity=None, stop=1, rx=RX2, tx=TX2)
 
 websocket = uwebsockets.client.connect('ws://gpspelle.com:80/ws/chat/ble/')
 
 def send_uart(message):
 
+    print("Send via uart to pyboard: [" + message + "]")
     uart.write(message)
 
 def read_uart(name):
@@ -35,6 +36,7 @@ def read_uart(name):
 
 def send_to_server(message):
 
+    print("Send to server: [" + message + "]")
     package = {"message": message, "recipient": 'chat_bla'}
     package = json.dumps(package)
     
@@ -57,11 +59,13 @@ def read_from_server(name):
 
 def main():
 
+    led_g = Pin(21, Pin.OUT)
     # Create one thread for the communication as follows
     print("Natura non contristatur")
     try:
         _thread.start_new_thread(read_from_server, ("Thread-1", ))
         _thread.start_new_thread(read_uart, ("Thread-2", ))
+        led_g.value(1)
     except:
         print("Error: unable to start thread")
 

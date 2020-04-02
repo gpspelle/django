@@ -2,12 +2,12 @@ from pyb import UART, Pin, delay
 import utime as time
 import _thread
 
-lock_robot = _thread.allocate_lock()
+lock_robot = False
 
 UART_ID = 3 # Uses Y9 as TX and Y10 as RX
 
-uart = UART(UART_ID, 9600)
-uart.init(9600, bits=8, parity=None, stop=1)
+uart = UART(UART_ID, 115200)
+uart.init(115200, bits=8, parity=None, stop=1)
 
 def handle_message(message):
     global lock_robot
@@ -29,20 +29,22 @@ def handle_message(message):
         # 4
 
     elif message == 'stop':
-        lock_robot.acquire() 
+        lock_robot = True
         # 5
 
     elif message == 'go':
-        lock_robot.release()
+        lock_robot = False
         # 6
 
 
 def send_uart(name):
 
+    global lock_robot
+
     for i in range(20):
         message = 'message ' + str(i) + '\n'
 
-        while lock_robot.locked():
+        while lock_robot:
             pass
 
         time.sleep(1)
@@ -51,14 +53,21 @@ def send_uart(name):
     print("Finished sending")
 
 def read_uart(name):
+    global lock_robot
+    led = pyb.LED(1)
 
     while True:
         message = None
         while message == None:
+            if lock_robot:
+                led.on()
+            else:
+                led.off()
             message = uart.read()
 
         print("Received: [" + message + "]")
-        _thread.start_new_thread(handle_event, (message, ))
+        #_thread.start_new_thread(handle_event, (message, ))
+        handle_message(message)
 
 def main():
 
