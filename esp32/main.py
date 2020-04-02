@@ -1,4 +1,3 @@
-from sock import Sock
 import _thread
 try:
     import usocket as socket
@@ -9,100 +8,69 @@ except:
     import time
     import json
 
-from microWebSrv import MicroWebSrv
+from machine import UART
+import uwebsockets.client
 
-lock_robot = _thread.allocate_lock()
+TX2 = 17
+RX2 = 16
 
-#NotAVairus
-esp32_host = '192.168.43.200'
-local_host = '192.168.43.187'
-#Brason
-#esp32_host = '192.168.2.168'
-#local_host = '192.168.2.127'
-#localhost
-#esp32_host = '127.0.0.1'
-#local_host = '127.0.0.1'
+uart = UART(1, 9600)
+uart.init(9600, bits=8, parity=None, stop=1, rx=RX2, tx=TX2)
 
+websocket = uwebsockets.client.connect('ws://gpspelle.com:80/ws/chat/ble/')
 
-def _acceptWebSocketCallback(webSocket, httpClient) :
-    print("WS ACCEPT")
-    webSocket.RecvTextCallback   = _recvTextCallback
-    webSocket.RecvBinaryCallback = _recvBinaryCallback
-    webSocket.ClosedCallback     = _closedCallback
+def send_uart(message):
 
-def _recvTextCallback(webSocket, msg) :
-    print("WS RECV TEXT : %s" % msg)
-    msg = msg.decode('utf-8')
+    uart.write(message)
 
-    msg = json.loads(msg)
-    msg = message['message']
+def read_uart(name):
+    
+    while True:
+        message = None
+        while message = None:
+            message = uart.read()
 
-    send_uart(msg)
+        message = str(message, 'utf-8')
+        send_to_server(message)
 
-def _recvBinaryCallback(webSocket, data) :
-    print("WS RECV DATA : %s" % data)
+def send_to_server(message):
 
-    def _closedCallback(webSocket) :
-        print("WS CLOSED")
+    package = {"message": message, "recipient": 'chat_bla'}
+    package = json.dumps(package)
+    
+    websocket.send(package)
 
-    def send_uart(message):
-    global lock_robot
+def read_from_server(name):
 
-    print(message)
+    allowed_messages = ['forward', 'backward', 'left', 'right', 'stop', 'go']
 
-    if message == 'forward':
-        pass
-        # 1
-
-    elif message == 'backward':
-        pass
-        # 2
-
-    elif message == 'left':
-        pass
-        # 3
-
-    elif message == 'right':
-        pass
-        # 4
-
-    elif message == 'stop':
-        lock_robot.acquire()
-        print("Lock acquired")
-        # 5
-
-    elif message == 'go':
-        lock_robot.release()
-        print("Lock released")
-        # 6
-
-    else:
-        pass
-        # unknown message
+    while True:
+        message = websocket.recv()
+        message = json.loads(message)
+        message = message['message']
+        
+        if message in allowed_messages: 
+            send_uart(message)
+        else:
+            print("Received: [" + message + "]")
 
 
 def main():
 
-    mws = MicroWebSrv(bindIP='ws://192.168.43.200') # TCP port 80 and files in /flash/www
-    mws.AcceptWebSocketCallback = _acceptWebSocketCallback # Function to receive WebSockets
-    mws.Start(threaded=True)                               # Starts server in a new thread
+    # Create one thread for the communication as follows
+    print("Natura non contristatur")
+    try:
+        _thread.start_new_thread(read_from_server, ("Thread-1", ))
+        _thread.start_new_thread(read_uart, ("Thread-2", ))
+    except:
+        print("Error: unable to start thread")
 
-    for i in range(20):
-        message = 'message ' + str(i) + '\n'
-        while lock_robot.locked():
-            pass
-        print("Lock state:", lock_robot.locked())
-        mws.sendText(message)
-        time.sleep(1)
-
-    print("Finished senting")
-
-
-    # Is it necessary?
     while True:
         pass
 
 
 if __name__ == "__main__":
     main()
+
+
 

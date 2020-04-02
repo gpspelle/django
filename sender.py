@@ -28,7 +28,7 @@ def chat_on_message(ws, message):
     global esp_send_buffer
     global esp_send_state
 
-    print("Received message from Website:[", message + "]")
+    print("Received message from Website:[" + message + "]")
 
     lock_esp.acquire()
     try:
@@ -75,7 +75,7 @@ def esp_on_message(ws, message):
     global chat_send_buffer
     global chat_send_state
 
-    print("Received message from ESP:[", message + "]")
+    print("Received message from ESP:[" + message + "]")
 
     lock_chat.acquire()
     try:
@@ -147,7 +147,7 @@ def chat_manager(thread_name):
 '''
 
 def esp_manager(thread_name):
-    host_websocket = 'ws://' + esp_host
+    host_websocket = esp_host
     websocket.enableTrace(True)
     ws = websocket.WebSocketApp(host_websocket, on_message = esp_on_message, on_error = esp_on_error, on_close = esp_on_close)
     ws.on_open = esp_on_open
@@ -161,10 +161,10 @@ def main():
     # Create two threads as follows
     try:
         x = threading.Thread(target=chat_manager, args=("Thread-1", ))
-        y = threading.Thread(target=esp_manager, args=("Thread-2", ))
+#        y = threading.Thread(target=esp_manager, args=("Thread-2", ))
 
         x.start()
-        y.start()
+#        y.start()
     except:
         print("Error: unable to start thread")
 
