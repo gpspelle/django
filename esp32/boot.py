@@ -42,6 +42,9 @@ if len(netprio) > 0 :
     print("Trying to create a WiFi network")
     # Secondly, if no network was found, create our own
     if not wlan.isconnected() :
+
+        led_r = Pin(22, Pin.OUT)
+        led_r.value(1)
         wlan.active(False)
         for net in netprio :
             if net >= 0 :
