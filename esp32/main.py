@@ -27,7 +27,7 @@ def read_uart(name):
     
     while True:
         message = None
-        while message = None:
+        while message == None:
             message = uart.read()
 
         message = str(message, 'utf-8')
