@@ -14,29 +14,48 @@ import uwebsockets.client
 TX2 = 17
 RX2 = 16
 
-uart = UART(1, 115200)
-uart.init(115200, bits=8, parity=None, stop=1, rx=RX2, tx=TX2)
+TX1 = 4
+RX1 = 2
+
+uart_1 = UART(1, 115200)
+uart_1.init(115200, bits=8, parity=None, stop=1, rx=RX1, tx=TX1)
+
+uart_2 = UART(2, 115200)
+uart_2.init(115200, bits=8, parity=None, stop=1, rx=RX2, tx=TX2)
 
 websocket = uwebsockets.client.connect('ws://gpspelle.com:80/ws/chat/ble/')
 
-def send_uart(message):
+def send_uart_2(message):
 
-    print("Send via uart to pyboard: [" + message + "]")
-    uart.write(message)
+    print("Send via uart_2 to pyboard: [" + message + "]")
+    uart_2.write(message)
 
-def read_uart(name):
+def read_uart_1(name):
     
     while True:
         message = None
         while message == None:
-            message = uart.read()
+            message = uart_2.read()
 
         message = str(message, 'utf-8')
-        send_to_server(message)
+        send_image_to_server(message)
 
-def send_to_server(message):
+def read_uart_2(name):
+    
+    while True:
+        message = None
+        while message == None:
+            message = uart_2.read()
 
-    print("Send to server: [" + message + "]")
+        message = str(message, 'utf-8')
+        send_message_to_server(message)
+
+def send_image_to_server(message):
+    print("Send image to server: [" + message + "]")
+
+def send_message_to_server(message):
+
+    print("Send message to server: [" + message + "]")
     package = {"message": message, "recipient": 'chat_bla'}
     package = json.dumps(package)
     
@@ -52,7 +71,7 @@ def read_from_server(name):
         message = message['message']
         
         if message in allowed_messages: 
-            send_uart(message)
+            send_uart_2(message)
         else:
             print("Received: [" + message + "]")
 
@@ -63,8 +82,9 @@ def main():
     # Create one thread for the communication as follows
     print("Natura non contristatur")
     try:
-        _thread.start_new_thread(read_from_server, ("Thread-1", ))
-        _thread.start_new_thread(read_uart, ("Thread-2", ))
+        _thread.start_new_thread(read_from_server, ("Thread-0", ))
+        _thread.start_new_thread(read_uart_1, ("Thread-1", ))
+        _thread.start_new_thread(read_uart_2, ("Thread-2", ))
         led_g.value(1)
     except:
         print("Error: unable to start thread")
