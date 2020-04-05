@@ -11,11 +11,11 @@ except:
 from machine import UART, Pin
 import uwebsockets.client
 
-TX2 = 17
-RX2 = 16
-
 TX1 = 4
 RX1 = 2
+
+TX2 = 17
+RX2 = 16
 
 uart_1 = UART(1, 115200)
 uart_1.init(115200, bits=8, parity=None, stop=1, rx=RX1, tx=TX1)
@@ -33,12 +33,55 @@ def send_uart_2(message):
 def read_uart_1(name):
     
     while True:
-        message = None
-        while message == None:
-            message = uart_2.read()
+        uart_1.write("start\n")
+        time.sleep(1)
+        ans = uart_1.readline()
+        try:
+            ans = str(ans[:-1], 'utf-8')
+            if ans == 'start':
+                break
+        except:
+            continue
 
-        message = str(message, 'utf-8')
-        send_image_to_server(message)
+    print("Natura non contristatur")
+    while True:
+        uart_1.write("1") # saying to camera send image
+
+        size = None
+        while size == None:
+            size = uart_1.readline()
+
+        size = size[:-1]
+        size = str(size, 'utf-8')
+        uart_1.write(size + '\n')
+        print("Read size:", size)
+
+        ok = None
+        while ok == None:
+            ok = uart_1.readline()
+
+        ok = ok[:-1]
+        msg = str(ok, 'utf-8')
+
+        print("message:", msg)
+        if msg != 'pass':
+            continue
+        
+
+        size = int(size)
+        read = 0
+        message = b''
+        while len(message) != size:
+            m = uart_1.read(size)
+            if m != None:
+                message += m
+
+        print("MESSAGE RECEIVED of SIZE", str(size), len(message))
+        print(message)
+        print("END OF MESSAGE")
+        #send_image_to_server(message)
+
+
 
 def read_uart_2(name):
     
@@ -78,9 +121,8 @@ def read_from_server(name):
 
 def main():
 
-    led_g = Pin(21, Pin.OUT)
     # Create one thread for the communication as follows
-    print("Natura non contristatur")
+
     try:
         _thread.start_new_thread(read_from_server, ("Thread-0", ))
         _thread.start_new_thread(read_uart_1, ("Thread-1", ))

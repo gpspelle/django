@@ -6,7 +6,12 @@ import usocket
 import utime
 import ujson
 from ntptime import settime
-from machine import Timer
+from machine import Timer, Pin
+
+led_r = Pin(22, Pin.OUT)
+led_g = Pin(21, Pin.OUT)
+led_r.value(0)
+led_g.value(0)
 
 # Get list of known WiFi networks
 try :
@@ -33,7 +38,7 @@ if len(netprio) > 0 :
         if ssid in netnames :
             print("Trying to connect to", ssid)
             wlan.connect(ssid, knownnets[net]['pword'])
-            utime.sleep(5)  # Wait 5 seconds for the connection
+            utime.sleep(8)  # Wait 5 seconds for the connection
             if wlan.isconnected() :
                 print("Success!")
                 break
@@ -43,7 +48,6 @@ if len(netprio) > 0 :
     # Secondly, if no network was found, create our own
     if not wlan.isconnected() :
 
-        led_r = Pin(22, Pin.OUT)
         led_r.value(1)
         wlan.active(False)
         for net in netprio :
@@ -57,8 +61,11 @@ if len(netprio) > 0 :
     print(wlan.ifconfig()[0], " on ", wlan.config('essid'))
 
 # If we can reach an NTP server, setup a timer to fix the drift of the RTC every hour
-if len(usocket.getaddrinfo('pool.ntp.org', 123)) > 0 :
-    # Setup a timer to set the time from pool.ntp.org
-    ntp_timer = Timer(-1)
-    ntp_timer.init(period=3600000, mode=Timer.PERIODIC, callback=lambda t:settime())
-    settime()
+try:
+    if len(usocket.getaddrinfo('pool.ntp.org', 123)) > 0 :
+        # Setup a timer to set the time from pool.ntp.org
+        ntp_timer = Timer(-1)
+        ntp_timer.init(period=3600000, mode=Timer.PERIODIC, callback=lambda t:settime())
+        settime()
+except:
+    print("Failed to set time")
