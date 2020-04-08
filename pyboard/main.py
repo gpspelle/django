@@ -14,6 +14,23 @@ led_1.on()
 led_2 = LED(2)
 led_2.off()
 
+def start_comm_slave():
+    while True:
+        alive = None
+        while alive == None or len(alive) != 6:
+            alive = uart.read(6)
+        try:
+            alive = str(alive, 'utf-8')
+            if alive == 'start\n':
+                 break
+        except:
+            continue
+
+    uart.write("start\n")
+
+
+'''
+
 def start_comm_slave(uart):
     while True:
         alive = uart.readline()
@@ -22,6 +39,7 @@ def start_comm_slave(uart):
 
         try:
             alive = str(alive[:-1], 'utf-8')
+            print("Received: [" + alive + "]")
             if alive == 'start':
                  break
         except:
@@ -29,6 +47,7 @@ def start_comm_slave(uart):
     
     uart.write("start\n")
 
+'''
 
 def handle_message(message):
     global lock_robot
@@ -61,7 +80,6 @@ def handle_message(message):
 
 
 def send_uart(name):
-    global lock_robot
 
     for i in range(20):
         message = 'message ' + str(i) + '\n'
@@ -85,7 +103,6 @@ def read_uart(name):
         handle_message(message)
 
 def blink(timer):
-    global led_1
     led_1.toggle()
 
 def manage_blink(name):
@@ -93,7 +110,7 @@ def manage_blink(name):
 
 def main():
     
-    start_comm_slave(uart)
+    start_comm_slave()
     print("Acta non verba")
     # Create one thread for the communication as follows
     try:

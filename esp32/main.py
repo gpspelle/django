@@ -6,6 +6,8 @@ from machine import UART, Pin
 from uwebsockets.client import connect
 import gc
 
+gc.enable()
+
 # https://forums.openmv.io/viewtopic.php?t=885
 batch = 2048
 
@@ -44,11 +46,11 @@ def send_uart_1(message):
     print("Send via uart_1 to pyboard: [" + message + "]")
     uart_1.write(message)
 
-def read_uart_2_new(name):
+def read_uart_2(name):
 
-    t2_send_message_to_server("Camera is not connected")
+    send_message_to_server("Camera is not connected", name)
     start_comm_master(uart_2)
-    t2_send_message_to_server("Camera is connected")
+    send_message_to_server("Camera is connected", name)
 
     i = 0
     msgs = [b'', b'']
@@ -56,19 +58,21 @@ def read_uart_2_new(name):
         msgs = read_data(msgs[1])
         message = msgs[0]
         i += 1
+
         # so far, no need for the timestamp
         #ct = localtime()
         #ct_str = '{0}{1}{2}_{3}{4}{5}'.format(ct[0], ct[1], ct[2], ct[3], ct[4], ct[5])
         #print(ct_str)
 
         send_image_to_server(message)
-        gc.collect()
+
+'''
 
 def read_uart_2(name):
     
-    t2_send_message_to_server("Camera is not connected")
+    send_message_to_server("Camera is not connected", name)
     start_comm_master(uart_2)
-    t2_send_message_to_server("Camera is connected")
+    send_message_to_server("Camera is connected", name)
 
     print("Natura non contristatur - uart_2 read")
     while True:
@@ -101,12 +105,13 @@ def read_uart_2(name):
         gc.collect()
         print(gc.mem_free())
 
+'''
 
 def read_uart_1(name):
     
-    t1_send_message_to_server("Leleco is not receiving commands")
+    send_message_to_server("Leleco is not receiving commands", name)
     start_comm_master(uart_1)
-    t1_send_message_to_server("Leleco is receiving commands")
+    send_message_to_server("Leleco is receiving commands", name)
     print("Cogito ergo sum - uart_1 read")
 
     while True:
@@ -114,7 +119,7 @@ def read_uart_1(name):
         while message == None:
             message = uart_1.read()
 
-        t1_send_message_to_server(message)
+        send_message_to_server(message, name)
 
 def send_image_to_server(message):
     #print("Send image to server")
@@ -125,24 +130,17 @@ def send_image_to_server(message):
     
     t2_websocket.send(package)
 
-def t1_send_message_to_server(message):
+def send_message_to_server(message, name):
 
     message = str(message, 'utf-8')
     print("Send message to server: [" + message + "]")
     package = {"message": message, "recipient": 'chat_chat'}
     package = json.dumps(package)
     
-    t1_websocket.send(package)
-
-def t2_send_message_to_server(message):
-
-    message = str(message, 'utf-8')
-    print("Send message to server: [" + message + "]")
-    package = {"message": message, "recipient": 'chat_chat'}
-    package = json.dumps(package)
-    
-    t2_websocket.send(package)
-
+    if '1' in name:
+        t1_websocket.send(package)
+    else:
+        t2_websocket.send(package)
 
 def read_from_server(name):
 
@@ -177,10 +175,6 @@ def read_data(buf):
         uart_2.write("1")
         buf += p
 
-    # Remove the garbage before the message start position
-    #start_pos = buf.find(separator_start)
-    #buf = buf[start_pos:]
-
     # Locate message separators
     start_pos = buf.find(separator_start)
     end_pos = buf.find(separator_end)
@@ -200,7 +194,7 @@ def main():
     try:
         _thread.start_new_thread(read_from_server, ("Thread-0", ))
         _thread.start_new_thread(read_uart_1, ("Thread-1", ))
-        _thread.start_new_thread(read_uart_2_new, ("Thread-2", ))
+        _thread.start_new_thread(read_uart_2, ("Thread-2", ))
         led_g.value(1)
     except:
         print("Error: unable to start thread")
