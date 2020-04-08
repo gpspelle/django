@@ -4,13 +4,8 @@ $(function() {
 		
 	// When we're using HTTPS, use WSS too.
 	var ws_scheme = window.location.protocol == "https:" ? "wss://" : "ws://";
-	var chatSocket = new WebSocket(ws_scheme + window.location.host + '/ws/chat/bla/');
-	//var chatSocket = new WebSocket(ws_scheme + window.location.host + '/ws/chat/' + roomName + '/');
-
-	//var wss_protocol = (window.location.protocol == 'https:') ? 'wss://': 'ws://';
-	//var chatSocket = new WebSocket(
-	//wss_protocol + window.location.host + '/ws/chat/' + roomName + '/'
-	//);
+	var chatSocket = new WebSocket(ws_scheme + window.location.host + '/ws/chat/chat/');
+	var imageSocket = new WebSocket(ws_scheme + window.location.host + '/ws/chat/image/');
 
 	chatSocket.onmessage = function(e) {
 		var data = JSON.parse(e.data);
@@ -20,17 +15,37 @@ $(function() {
 
 	};
 
+	imageSocket.onmessage = function(e) {
+
+		var data = JSON.parse(e.data);
+		var url = data['message'];
+		var src_url = 'data:image/jpeg;base64,' + url;
+		$('#image').attr('src', src_url);
+
+	};
 
 	chatSocket.onopen = function(e) {
-		console.log("WebSocket is open now.");
-		document.querySelector('#chat-log').value += ('Welcome to the Django Chatbot.\nPlease type `help` for the commands list.\n')
+		console.log("Chat WebSocket is open now.");
+		document.querySelector('#chat-log').value += ('Chat webscoket working.\n')
+	}
+
+	imageSocket.onopen = function(e) {
+		console.log("Image WebSocket is open now.");
+		document.querySelector('#chat-log').value += ('Image websocket working.\n')
 	}
 
 
 	chatSocket.onclose = function(e) {
-		document.querySelector('#chat-log').value += ('Socket closed unexpectedly, please reload the page.\n')
+		document.querySelector('#chat-log').value += ('Chat Socket closed unexpectedly, please reload the page.\n')
 		//this.chatSocket = new WebSocket(chatSocket.url);
 	};
+
+	imageSocket.onclose = function(e) {
+		document.querySelector('#chat-log').value += ('Image Socket closed unexpectedly, please reload the page.\n')
+		//this.chatSocket = new WebSocket(chatSocket.url);
+	};
+
+
 
 	document.querySelector('#chat-message-input').focus();
 	document.querySelector('#chat-message-input').onkeyup = function(e) {
@@ -45,7 +60,7 @@ $(function() {
 		document.querySelector('#chat-log').value += ('Message sent: ');
 		document.querySelector('#chat-log').value += (message + '\n');
 		chatSocket.send(JSON.stringify({
-			'message': message, 'recipient': 'chat_ble'
+			'message': message, 'recipient': 'chat_chatesp32'
 		}));
 
 		messageInputDom.value = '';
@@ -58,7 +73,7 @@ $(function() {
 		document.querySelector('#chat-log').value += (message + '\n');
 
 		chatSocket.send(JSON.stringify({
-			'message': message, 'recipient': 'chat_ble'
+			'message': message, 'recipient': 'chat_chatesp32'
 		}));
 	};
 

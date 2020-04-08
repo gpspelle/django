@@ -36,6 +36,7 @@ class ChatConsumer(WebsocketConsumer):
 
         recipient = text_data_json['recipient']
         message = text_data_json['message']
+        print(message)
 
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(
@@ -54,20 +55,3 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'message': message
         }))
-
-        #if recipient == 'itself':
-            # Send message to WebSocket
-        #    self.send(text_data=json.dumps({
-        #        'message': message
-        #    }))
-        #else:
-        #    # Send message back to middleware
-        #    host_socket = '127.0.0.1'
-        #    port = 8888
-
-        #    s = Sock()
-        #    s.connect(host_socket, port)
-        #    data = json.dumps({'message': message})
-        #    data = data.encode()
-        #    s.send(data)
-        #    s.close()

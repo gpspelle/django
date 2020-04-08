@@ -1,5 +1,4 @@
 from pyb import UART, LED
-import utime as time
 import sensor, image
 
 led = LED(1)

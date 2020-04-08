@@ -1,6 +1,9 @@
 from pyb import UART, LED
-import sensor, time
+import sensor, time, image
+import ubinascii
+import gc
 
+gc.collect()
 led_r = LED(1)
 led_b = LED(3)
 led_r.on()
@@ -8,32 +11,31 @@ led_b.on()
 #UART 3 -> RX: P5
 #       -> TX: P4
 
-uart = UART(3, 115200)
-uart.init(115200, bits=8, parity=None, stop=1)
+uart = UART(3, 1152000)
+uart.init(1152000, bits=8, parity=None, stop=1)
 
 sensor.reset()                      # Reset and initialize the sensor.
 sensor.set_pixformat(sensor.RGB565) # Set pixel format to RGB565 (or GRAYSCALE)
 sensor.set_framesize(sensor.QVGA)   # Set frame size to QVGA (320x240)
 sensor.skip_frames(time = 2000)     # Wait for settings take effect.
 
-while True:
-    alive = uart.readline()
-    print("Hi")
-    if alive == None:
-        continue
+def start_comm_slave():
+    global uart
+    while True:
+        alive = None
+        while alive == None or len(alive) != 6:
+            alive = uart.read(6)
+        try:
+            alive = str(alive, 'utf-8')
+            if alive == 'start\n':
+                 break
+        except:
+            continue
 
-    try:
-        alive = str(alive[:-1], 'utf-8')
-        if alive == 'start':
-             break
-    except:
-        continue
+    uart.write("start\n")
 
-uart.write("start\n")
-
-print("Nolite te bastardes carborundorum")
-
-while True:
+def receive_permission():
+    global uart
 
     while True:
         start = uart.read(1)
@@ -42,31 +44,32 @@ while True:
 
         try:
             if int(start) == 1:
-                break
+                return
         except:
             continue
 
-    img = sensor.snapshot().compress() # Take a picture and return the image.
-    size = img.size()
-    uart.write(str(size) + '\n')
 
-    sent_c = ''
-    while True:
-        sent_size = uart.read(1)
-        if sent_size != None:
-            c = str(sent_size, 'utf-8')
-            if c == '\n':
-                break
-            sent_c += str(sent_size, 'utf-8')
+start_comm_slave()
+print("Nolite te bastardes carborundorum")
+start_signal = b'____start____'
+end_signal = b'____end____'
+while True:
+    img = sensor.snapshot() # Take a picture and return the image.
+    img_compressed = img.compress(quality=35)
+    bin = ubinascii.b2a_base64(img_compressed)
+    message = start_signal + bin + end_signal
+    size = len(message)
+    batch = 2048
+    wrote = 0
+    for i in range(size/batch):
+        wrote += uart.write(message[i*batch:(i+1)*batch])
 
-    print("Received:", sent_c, " and", str(size))
+        m = None
+        while m == None:
+            m = uart.read(1)
 
-    if int(sent_c) == size:
-        uart.write('pass\n')
-        uart.write(img)
-    else:
-        uart.write('fail\n')
-
-    time.sleep(3000)
+    #print(wrote, size)
+    #uart.write(bin)
+    #uart.write(end_signal)
     led_r.toggle()
     led_b.toggle()
