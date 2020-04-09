@@ -8,6 +8,8 @@ import gc
 
 gc.enable()
 
+sock_lock = _thread.allocate_lock()
+
 # https://forums.openmv.io/viewtopic.php?t=885
 batch = 2048
 
@@ -128,7 +130,9 @@ def send_image_to_server(message):
     package = {"message": message, "recipient": 'chat_image'}
     package = json.dumps(package)
     
+    sock_lock.acquire()
     t2_websocket.send(package)
+    sock_lock.release()
 
 def send_message_to_server(message, name):
 
@@ -138,9 +142,13 @@ def send_message_to_server(message, name):
     package = json.dumps(package)
     
     if '1' in name:
+        sock_lock.acquire()
         t1_websocket.send(package)
     else:
+        sock_lock.acquire()
         t2_websocket.send(package)
+
+    sock_lock.release()
 
 def read_from_server(name):
 

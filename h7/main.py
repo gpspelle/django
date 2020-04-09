@@ -34,27 +34,17 @@ def start_comm_slave():
 
     uart.write("start\n")
 
-def receive_permission():
-    global uart
-
-    while True:
-        start = uart.read(1)
-        if start == None:
-            continue
-
-        try:
-            if int(start) == 1:
-                return
-        except:
-            continue
-
 
 start_comm_slave()
 print("Nolite te bastardes carborundorum")
 start_signal = b'____start____'
 end_signal = b'____end____'
+fps = '0'
+clock = time.clock()
 while True:
+    clock.tick()
     img = sensor.snapshot() # Take a picture and return the image.
+    img.draw_string(5, 5, fps)
     img_compressed = img.compress(quality=35)
     bin = ubinascii.b2a_base64(img_compressed)
     message = start_signal + bin + end_signal
@@ -73,3 +63,5 @@ while True:
     #uart.write(end_signal)
     led_r.toggle()
     led_b.toggle()
+    fps = str(clock.fps())
+
