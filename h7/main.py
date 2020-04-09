@@ -34,7 +34,6 @@ def start_comm_slave():
 
     uart.write("start\n")
 
-
 start_comm_slave()
 print("Nolite te bastardes carborundorum")
 start_signal = b'____start____'
@@ -58,9 +57,6 @@ while True:
         while m == None:
             m = uart.read(1)
 
-    #print(wrote, size)
-    #uart.write(bin)
-    #uart.write(end_signal)
     led_r.toggle()
     led_b.toggle()
     fps = str(clock.fps())
