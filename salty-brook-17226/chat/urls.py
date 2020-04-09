@@ -7,7 +7,3 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('<str:room_name>/', views.room, name='room'),
 ]
-
-#urlpatterns = [
-#    path('', views.ChatView.as_view(), name='chat'),
-#]
