@@ -4,11 +4,10 @@ import ujson as json
 from utime import sleep, localtime
 from machine import UART, Pin
 from uwebsockets.client import connect
+from rplidar import RPLidar
 import gc
 
 gc.enable()
-
-#sock_lock = _thread.allocate_lock()
 
 # https://forums.openmv.io/viewtopic.php?t=885
 batch = 2048
@@ -19,11 +18,16 @@ RX1 = 2
 TX2 = 17
 RX2 = 16
 
+TX3 = 19
+RX3 = 18
+
 uart_1 = UART(1, 115200)
 uart_1.init(115200, bits=8, parity=None, stop=1, rx=RX1, tx=TX1)
 
 uart_2 = UART(2, 1152000, rxbuf=batch)
 uart_2.init(1152000, bits=8, parity=None, stop=1, rx=RX2, tx=TX2)
+
+lidar = RPLidar(RX, TX)
 
 t1_websocket = connect('ws://gpspelle.com:80/ws/chat/chatesp32/')
 t2_websocket = connect('ws://gpspelle.com:80/ws/chat/imageesp32/')
@@ -195,6 +199,22 @@ def read_data(buf):
 
     return [msg, new_msg]
 
+def lidar(name):
+    info = lidar.get_info()
+    print(info)
+
+    health = lidar.get_health()
+    print(health)
+
+    for i, scan in enumerate(lidar.iter_scans()):
+        print('%d: Got %d measurments' % (i, len(scan)))
+        if i > 10:
+            break
+
+    lidar.stop()
+    lidar.stop_motor()
+    lidar.disconnect()
+
 def main():
 
     # Create one thread for the communication as follows
@@ -203,6 +223,7 @@ def main():
         _thread.start_new_thread(read_from_server, ("Thread-0", ))
         _thread.start_new_thread(read_uart_1, ("Thread-1", ))
         _thread.start_new_thread(read_uart_2, ("Thread-2", ))
+        _thread.start_new_thread(lidar, ("Thread-3", ))
         led_g.value(1)
     except:
         print("Error: unable to start thread")
