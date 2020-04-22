@@ -267,3 +267,32 @@ body{
   box-shadow: 7px 8px 15px rgba(0,0,0,0.2);
   pointer-events: none;
 }
+
+body {
+  font-family: sans-serif;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 120px 80px;
+  grid-gap: .5em;
+  label {
+    grid-column: 1;
+    input, button {
+      grid-column: 2;
+    }
+  }
+}
+
+svg line {
+  stroke: #999;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+svg polygon {
+  fill: rgba(40, 60, 255, 0.3);
+  stroke: rgb(40, 60, 255);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+

@@ -64,6 +64,22 @@
     <p>
 	<img src="" id="image">
     </p>
+
+    <div class="grid">
+	  <label for="length">Line length</label>
+	  <input type="number" name="length" id="length" />
+
+	  <label for="count">Number of lines</label>
+	  <input type="number" name="count" id="count" />
+
+	  &nbsp;
+	  <button id="setup">Go!</button>
+	
+    </div>
+
+    <svg id="graph"></svg>
+
+
 </body>
 
 <script type="text/javascript" src='{% static "chat/jquery-3.4.1.min.js" %}'></script>

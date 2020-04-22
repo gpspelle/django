@@ -1,5 +1,6 @@
 #For additional information please refer to the RPLidar class documentation.
 
+#import logging
 from machine import UART
 import utime as time
 import ubinascii as binascii
@@ -44,15 +45,15 @@ class RPLidarException(Exception):
 def _process_scan(raw):
     '''Processes input raw data and returns measurment data'''
     new_scan = bool(raw[0] & 0b1)
-    inversed_new_scan = bool((raw[0] >> 1) & 0b1)
+    inversed_new_scan = bool(raw[0] >> 1) & 0b1)
     quality = raw[0] >> 2
     if new_scan == inversed_new_scan:
         raise RPLidarException('New scan flags mismatch')
     check_bit = raw[1] & 0b1
     if check_bit != 1:
         raise RPLidarException('Check bit not equal to 1')
-    angle = ((raw[1] >> 1) + (raw[2] << 7)) / 64.
-    distance = (raw[3] + (raw[4] << 8)) / 4.
+    angle = (raw[1] >> 1) + raw[2] << 7)) / 64.
+    distance = raw[3] + raw[4] << 8)) / 4.
     return new_scan, quality, angle, distance
 
 
@@ -101,11 +102,11 @@ class RPLidar(object):
         if self._serial_port is not None:
             self.disconnect()
         try:
-            self._serial_port = UART(2, self.baudrate)
+            self._serial_port = UART(3, self.baudrate)
             self._serial_port.init(self.baudrate, bits=8, parity=None, stop=1, rx=self.rx, tx=self.tx)
-        except Exception as e:
+        except serial.SerialException as err:
             raise RPLidarException('Failed to connect to the sensor '
-                    'due to:', e)
+                                   'due to: %s' % err)
 
     def disconnect(self):
         '''Disconnects from the serial port'''
@@ -157,24 +158,7 @@ class RPLidar(object):
 
     def _read_descriptor(self):
         '''Reads descriptor packet'''
-
-        while True:
-
-            descriptor = b''
-            bytes_read = 0
-            while bytes_read != DESCRIPTOR_LEN:
-                m = self._serial_port.read(DESCRIPTOR_LEN - bytes_read)
-                if m != None:
-                    descriptor += m
-                    bytes_read += len(m)
-
-            print(descriptor)
-            if descriptor.startswith(SYNC_BYTE + SYNC_BYTE2):
-                break
-
-
         descriptor = self._serial_port.read(DESCRIPTOR_LEN)
-        print(descriptor, SYNC_BYTE, SYNC_BYTE2)
         #self.logger.debug('Recieved descriptor: %s', descriptor)
         if len(descriptor) != DESCRIPTOR_LEN:
             raise RPLidarException('Descriptor length mismatch')
@@ -307,7 +291,7 @@ class RPLidar(object):
                                        'Error code: %d' % error_code)
         #elif status == _HEALTH_STATUSES[1]:
         #    self.logger.warning('Warning sensor status detected! '
-        #                        'Error code: %d', error_code)
+                                'Error code: %d', error_code)
         cmd = SCAN_BYTE
         self._send_cmd(cmd)
         dsize, is_single, dtype = self._read_descriptor()

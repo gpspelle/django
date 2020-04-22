@@ -49,7 +49,7 @@ $(function() {
 
 	document.querySelector('#chat-message-input').focus();
 	document.querySelector('#chat-message-input').onkeyup = function(e) {
-		if (e.keyCode === 13) {  // enter, return
+		if (e.keyCode === 13) {	// enter, return
 			document.querySelector('#chat-message-submit').click();
 		}
 	};
@@ -76,5 +76,60 @@ $(function() {
 			'message': message, 'recipient': 'chat_chatesp32'
 		}));
 	};
+
+	var length;
+	var count;
+	var interval;
+	var lines;
+	$('#length').val(100);
+	$('#count').val(5);
+	$('#graph').attr('width', length * 2).attr('height', length * 2);
+
+	// Creates svg element, returned as jQuery object
+	// source: https://stackoverflow.com/a/29017767
+	function $s(elem) {
+		return $(document.createElementNS('http://www.w3.org/2000/svg', elem));
+	}
+
+	// source: https://stackoverflow.com/a/27572056
+	function findNewPoint(x, y, angle, distance) {
+		var result = {};
+		result.x = Math.round(Math.cos(angle * Math.PI / 180) * distance + x);
+		result.y = Math.round(Math.sin(angle * Math.PI / 180) * distance + y);
+		return result;
+	}
+
+	function setup() {
+		length = parseInt($('#length').val());
+		count = parseInt($('#count').val());
+		interval = 360 / count;
+
+		$('#graph').empty();
+		$('#graph').attr('width', length * 2).attr('height', length * 2);
+		lines = [];
+		var polygonPoints = [];
+		for (var i = 0; i < count; i++) {
+			var angle = interval * i;
+			lines[i] = {
+				max: findNewPoint(length, length, (interval * i) - 90, length),
+				score: findNewPoint(length, length, (interval * i) - 90, length * Math.random())
+			};
+			polygonPoints[i] = lines[i].score.x + ',' + lines[i].score.y;
+			var attributes = {
+				x1: length,
+				y1: length,
+				x2: lines[i].max.x,
+				y2: lines[i].max.y
+			};
+			$s('line').attr(attributes).appendTo('#graph');
+		}
+		//console.dir(lines);
+		//console.dir(polygonPoints.join(' '));
+		$s('polygon').attr({'points': polygonPoints}).appendTo('#graph');
+	}
+
+	$('#setup').click(setup);
+	setup();
+
 
 });

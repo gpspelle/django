@@ -1,9 +1,33 @@
-#For additional information please refer to the RPLidar class documentation.
+'''Simple and lightweight module for working with RPLidar rangefinder scanners.
 
-from machine import UART
-import utime as time
-import ubinascii as binascii
-import ustruct as struct
+Usage example:
+
+>>> from rplidar import RPLidar
+>>> lidar = RPLidar('/dev/ttyUSB0')
+>>> 
+>>> info = lidar.get_info()
+>>> print(info)
+>>> 
+>>> health = lidar.get_health()
+>>> print(health)
+>>> 
+>>> for i, scan in enumerate(lidar.iter_scans()):
+...  print('%d: Got %d measurments' % (i, len(scan)))
+...  if i > 10:
+...   break
+...
+>>> lidar.stop()
+>>> lidar.stop_motor()
+>>> lidar.disconnect()
+
+For additional information please refer to the RPLidar class documentation.
+'''
+import logging
+import sys
+import time
+import codecs
+import serial
+import struct
 
 SYNC_BYTE = b'\xA5'
 SYNC_BYTE2 = b'\x5A'
@@ -41,18 +65,22 @@ class RPLidarException(Exception):
     '''Basic exception class for RPLidar'''
 
 
+def _b2i(byte):
+    '''Converts byte to integer (for Python 2 compatability)'''
+    return byte if int(sys.version[0]) == 3 else ord(byte)
+
 def _process_scan(raw):
     '''Processes input raw data and returns measurment data'''
-    new_scan = bool(raw[0] & 0b1)
-    inversed_new_scan = bool((raw[0] >> 1) & 0b1)
-    quality = raw[0] >> 2
+    new_scan = bool(_b2i(raw[0]) & 0b1)
+    inversed_new_scan = bool((_b2i(raw[0]) >> 1) & 0b1)
+    quality = _b2i(raw[0]) >> 2
     if new_scan == inversed_new_scan:
         raise RPLidarException('New scan flags mismatch')
-    check_bit = raw[1] & 0b1
+    check_bit = _b2i(raw[1]) & 0b1
     if check_bit != 1:
         raise RPLidarException('Check bit not equal to 1')
-    angle = ((raw[1] >> 1) + (raw[2] << 7)) / 64.
-    distance = (raw[3] + (raw[4] << 8)) / 4.
+    angle = ((_b2i(raw[1]) >> 1) + (_b2i(raw[2]) << 7)) / 64.
+    distance = (_b2i(raw[3]) + (_b2i(raw[4]) << 8)) / 4.
     return new_scan, quality, angle, distance
 
 
@@ -60,38 +88,33 @@ class RPLidar(object):
     '''Class for communicating with RPLidar rangefinder scanners'''
 
     _serial_port = None  #: serial port connection
-    rx = -1  #: RX port number
-    tx = -1  #: TX port number
+    port = ''  #: Serial port name, e.g. /dev/ttyUSB0
     timeout = 1  #: Serial port timeout
     motor = False  #: Is motor running?
     baudrate = 115200  #: Baudrate for serial port
 
-    def __init__(self, rx, tx, baudrate=115200, timeout=1, logger=None):
+    def __init__(self, port, baudrate=115200, timeout=1, logger=None):
         '''Initilize RPLidar object for communicating with the sensor.
 
         Parameters
         ----------
-        rx : int
-            RX port name to which sensor is connected
-        tx : int
-            TX port name to which sensor is connected
+        port : str
+            Serial port name to which sensor is connected
         baudrate : int, optional
             Baudrate for serial connection (the default is 115200)
         timeout : float, optional
             Serial port connection timeout in seconds (the default is 1)
         logger : logging.Logger instance, optional
             Logger instance, if none is provided new instance is created
-            Not being used because of MicroPython compatibility
         '''
         self._serial_port = None
-        self.rx = rx
-        self.tx = tx
+        self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
         self.motor_running = None
-        #if logger is None:
-        #    logger = logging.getLogger('rplidar')
-        #self.logger = logger
+        if logger is None:
+            logger = logging.getLogger('rplidar')
+        self.logger = logger
         self.connect()
         self.start_motor()
 
@@ -101,17 +124,19 @@ class RPLidar(object):
         if self._serial_port is not None:
             self.disconnect()
         try:
-            self._serial_port = UART(2, self.baudrate)
-            self._serial_port.init(self.baudrate, bits=8, parity=None, stop=1, rx=self.rx, tx=self.tx)
-        except Exception as e:
+            self._serial_port = serial.Serial(
+                self.port, self.baudrate,
+                parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+                timeout=self.timeout, dsrdtr=True)
+        except serial.SerialException as err:
             raise RPLidarException('Failed to connect to the sensor '
-                    'due to:', e)
+                                   'due to: %s' % err)
 
     def disconnect(self):
         '''Disconnects from the serial port'''
         if self._serial_port is None:
             return
-        self._serial_port.deinit()
+        self._serial_port.close()
 
     def set_pwm(self, pwm):
         assert(0 <= pwm <= MAX_MOTOR_PWM)
@@ -120,9 +145,9 @@ class RPLidar(object):
 
     def start_motor(self):
         '''Starts sensor motor'''
-        #self.logger.info('Starting motor')
+        self.logger.info('Starting motor')
         # For A1
-        #self._serial_port.dtr = False
+        self._serial_port.dtr = False
 
         # For A2
         self.set_pwm(DEFAULT_MOTOR_PWM)
@@ -130,12 +155,12 @@ class RPLidar(object):
 
     def stop_motor(self):
         '''Stops sensor motor'''
-        #self.logger.info('Stoping motor')
+        self.logger.info('Stoping motor')
         # For A2
         self.set_pwm(0)
         time.sleep(.001)
         # For A1
-        #self._serial_port.dtr = True
+        self._serial_port.dtr = True
         self.motor_running = False
 
     def _send_payload_cmd(self, cmd, payload):
@@ -147,47 +172,30 @@ class RPLidar(object):
             checksum ^= v
         req += struct.pack('B', checksum)
         self._serial_port.write(req)
-        #self.logger.debug('Command sent: %s' % req)
+        self.logger.debug('Command sent: %s' % req)
 
     def _send_cmd(self, cmd):
         '''Sends `cmd` command to the sensor'''
         req = SYNC_BYTE + cmd
         self._serial_port.write(req)
-        #self.logger.debug('Command sent: %s' % req)
+        self.logger.debug('Command sent: %s' % req)
 
     def _read_descriptor(self):
         '''Reads descriptor packet'''
-
-        while True:
-
-            descriptor = b''
-            bytes_read = 0
-            while bytes_read != DESCRIPTOR_LEN:
-                m = self._serial_port.read(DESCRIPTOR_LEN - bytes_read)
-                if m != None:
-                    descriptor += m
-                    bytes_read += len(m)
-
-            print(descriptor)
-            if descriptor.startswith(SYNC_BYTE + SYNC_BYTE2):
-                break
-
-
         descriptor = self._serial_port.read(DESCRIPTOR_LEN)
-        print(descriptor, SYNC_BYTE, SYNC_BYTE2)
-        #self.logger.debug('Recieved descriptor: %s', descriptor)
+        self.logger.debug('Recieved descriptor: %s', descriptor)
         if len(descriptor) != DESCRIPTOR_LEN:
             raise RPLidarException('Descriptor length mismatch')
         elif not descriptor.startswith(SYNC_BYTE + SYNC_BYTE2):
             raise RPLidarException('Incorrect descriptor starting bytes')
-        is_single = descriptor[-2] == 0
-        return descriptor[2], is_single, descriptor[-1]
+        is_single = _b2i(descriptor[-2]) == 0
+        return _b2i(descriptor[2]), is_single, _b2i(descriptor[-1])
 
     def _read_response(self, dsize):
         '''Reads response packet with length of `dsize` bytes'''
-        #self.logger.debug('Trying to read response: %d bytes', dsize)
+        self.logger.debug('Trying to read response: %d bytes', dsize)
         data = self._serial_port.read(dsize)
-        #self.logger.debug('Recieved data: %s', data)
+        self.logger.debug('Recieved data: %s', data)
         if len(data) != dsize:
             raise RPLidarException('Wrong body size')
         return data
@@ -209,15 +217,12 @@ class RPLidar(object):
         if dtype != INFO_TYPE:
             raise RPLidarException('Wrong response data type')
         raw = self._read_response(dsize)
-        serialnumber = binascii.hexlify(raw[4:]).upper()
-        # todo: serialnumber still in hex, could convert it to ASCII
-        #serialnumber =  
-        #serialnumber = codecs.encode(raw[4:], 'hex').upper()
-        #serialnumber = codecs.decode(serialnumber, 'ascii')
+        serialnumber = codecs.encode(raw[4:], 'hex').upper()
+        serialnumber = codecs.decode(serialnumber, 'ascii')
         data = {
-            'model': raw[0],
-            'firmware': (raw[2], raw[1]),
-            'hardware': raw[3],
+            'model': _b2i(raw[0]),
+            'firmware': (_b2i(raw[2]), _b2i(raw[1])),
+            'hardware': _b2i(raw[3]),
             'serialnumber': serialnumber,
         }
         return data
@@ -246,20 +251,18 @@ class RPLidar(object):
         if dtype != HEALTH_TYPE:
             raise RPLidarException('Wrong response data type')
         raw = self._read_response(dsize)
-        status = _HEALTH_STATUSES[raw[0]]
-        error_code = (raw[1] << 8) + raw[2]
+        status = _HEALTH_STATUSES[_b2i(raw[0])]
+        error_code = (_b2i(raw[1]) << 8) + _b2i(raw[2])
         return status, error_code
 
     def clear_input(self):
         '''Clears input buffer by reading all available data'''
-        m = ''
-        while m != None:
-            m = self._serial_port.read()
+        self._serial_port.read_all()
 
     def stop(self):
         '''Stops scanning process, disables laser diode and the measurment
         system, moves sensor to the idle state.'''
-        #self.logger.info('Stoping scanning')
+        self.logger.info('Stoping scanning')
         self._send_cmd(STOP_BYTE)
         time.sleep(.001)
         self.clear_input()
@@ -267,7 +270,7 @@ class RPLidar(object):
     def reset(self):
         '''Resets sensor core, reverting it to a similar state as it has
         just been powered up.'''
-        #self.logger.info('Reseting the sensor')
+        self.logger.info('Reseting the sensor')
         self._send_cmd(RESET_BYTE)
         time.sleep(.002)
 
@@ -296,18 +299,18 @@ class RPLidar(object):
         '''
         self.start_motor()
         status, error_code = self.get_health()
-        #self.logger.debug('Health status: %s [%d]', status, error_code)
+        self.logger.debug('Health status: %s [%d]', status, error_code)
         if status == _HEALTH_STATUSES[2]:
-            #self.logger.warning('Trying to reset sensor due to the error. '
-            #                    'Error code: %d', error_code)
+            self.logger.warning('Trying to reset sensor due to the error. '
+                                'Error code: %d', error_code)
             self.reset()
             status, error_code = self.get_health()
             if status == _HEALTH_STATUSES[2]:
                 raise RPLidarException('RPLidar hardware failure. '
                                        'Error code: %d' % error_code)
-        #elif status == _HEALTH_STATUSES[1]:
-        #    self.logger.warning('Warning sensor status detected! '
-        #                        'Error code: %d', error_code)
+        elif status == _HEALTH_STATUSES[1]:
+            self.logger.warning('Warning sensor status detected! '
+                                'Error code: %d', error_code)
         cmd = SCAN_BYTE
         self._send_cmd(cmd)
         dsize, is_single, dtype = self._read_descriptor()
@@ -319,14 +322,14 @@ class RPLidar(object):
             raise RPLidarException('Wrong response data type')
         while True:
             raw = self._read_response(dsize)
-            #self.logger.debug('Recieved scan response: %s' % raw)
+            self.logger.debug('Recieved scan response: %s' % raw)
             if max_buf_meas:
-                data_in_buf = self._serial_port.any()
+                data_in_buf = self._serial_port.in_waiting
                 if data_in_buf > max_buf_meas*dsize:
-                    #self.logger.warning(
-                    #    'Too many measurments in the input buffer: %d/%d. '
-                    #    'Clearing buffer...',
-                    #    data_in_buf//dsize, max_buf_meas)
+                    self.logger.warning(
+                        'Too many measurments in the input buffer: %d/%d. '
+                        'Clearing buffer...',
+                        data_in_buf//dsize, max_buf_meas)
                     self._serial_port.read(data_in_buf//dsize*dsize)
             yield _process_scan(raw)
 

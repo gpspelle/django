@@ -18,8 +18,8 @@ RX1 = 2
 TX2 = 17
 RX2 = 16
 
-TX3 = 19
-RX3 = 18
+TX3 = 14
+RX3 = 12
 
 uart_1 = UART(1, 115200)
 uart_1.init(115200, bits=8, parity=None, stop=1, rx=RX1, tx=TX1)
@@ -27,10 +27,10 @@ uart_1.init(115200, bits=8, parity=None, stop=1, rx=RX1, tx=TX1)
 uart_2 = UART(2, 1152000, rxbuf=batch)
 uart_2.init(1152000, bits=8, parity=None, stop=1, rx=RX2, tx=TX2)
 
-lidar = RPLidar(RX, TX)
+rplidar = RPLidar(RX3, TX3)
 
-t1_websocket = connect('ws://gpspelle.com:80/ws/chat/chatesp32/')
-t2_websocket = connect('ws://gpspelle.com:80/ws/chat/imageesp32/')
+#t1_websocket = connect('ws://gpspelle.com:80/ws/chat/chatesp32/')
+#t2_websocket = connect('ws://gpspelle.com:80/ws/chat/imageesp32/')
 
 separator_start = b'____start____'
 separator_end = b'____end____'
@@ -200,29 +200,30 @@ def read_data(buf):
     return [msg, new_msg]
 
 def lidar(name):
-    info = lidar.get_info()
+    print("In vino veritas")
+    info = rplidar.get_info()
     print(info)
 
-    health = lidar.get_health()
+    health = rplidar.get_health()
     print(health)
 
-    for i, scan in enumerate(lidar.iter_scans()):
+    for i, scan in enumerate(rplidar.iter_scans()):
         print('%d: Got %d measurments' % (i, len(scan)))
         if i > 10:
             break
 
-    lidar.stop()
-    lidar.stop_motor()
-    lidar.disconnect()
+    rplidar.stop()
+    rplidar.stop_motor()
+    rplidar.disconnect()
 
 def main():
 
     # Create one thread for the communication as follows
 
     try:
-        _thread.start_new_thread(read_from_server, ("Thread-0", ))
-        _thread.start_new_thread(read_uart_1, ("Thread-1", ))
-        _thread.start_new_thread(read_uart_2, ("Thread-2", ))
+        #_thread.start_new_thread(read_from_server, ("Thread-0", ))
+        #_thread.start_new_thread(read_uart_1, ("Thread-1", ))
+        #_thread.start_new_thread(read_uart_2, ("Thread-2", ))
         _thread.start_new_thread(lidar, ("Thread-3", ))
         led_g.value(1)
     except:
