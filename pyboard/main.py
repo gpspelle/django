@@ -1,6 +1,7 @@
 from pyb import UART, Pin, delay, LED, Timer
 import utime as time
 import _thread
+from robot import Robot
 
 lock_robot = False
 
@@ -13,6 +14,9 @@ led_1.on()
 
 led_2 = LED(2)
 led_2.off()
+
+# Instanciate robot
+r = Robot()
 
 def start_comm_slave():
     while True:
@@ -29,43 +33,24 @@ def start_comm_slave():
     uart.write("start\n")
 
 
-'''
-
-def start_comm_slave(uart):
-    while True:
-        alive = uart.readline()
-        if alive == None:
-            continue
-
-        try:
-            alive = str(alive[:-1], 'utf-8')
-            print("Received: [" + alive + "]")
-            if alive == 'start':
-                 break
-        except:
-            continue
-    
-    uart.write("start\n")
-
-'''
-
 def handle_message(message):
     global lock_robot
 
     if message == 'forward':
-        pass
+        r.forward_dcm("50")
         # 1
 
     elif message == 'backward':
-        pass
+        r.rotate_degrees(180)
+        r.forward_dcm("50")
         # 2
 
     elif message == 'left':
-        pass
+        r.rotate_degrees(90)
         # 3
 
     elif message == 'right':
-        pass
+        r.rotate_degrees(270)
         # 4
 
     elif message == 'stop':
