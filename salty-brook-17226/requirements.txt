@@ -13,7 +13,7 @@ psycopg2-binary==2.8.4
 redis==2.10.6
 six==1.14.0
 whitenoise==5.0.1
-celery==4.4.0
+celery==5.2.2
 requests==2.22.0
 django-redis==4.11.0
 django-heroku==0.3.1
